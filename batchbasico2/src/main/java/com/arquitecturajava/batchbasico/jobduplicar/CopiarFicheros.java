@@ -1,4 +1,4 @@
-package com.arquitecturajava.batchbasico.pasosficheros;
+package com.arquitecturajava.batchbasico.jobduplicar;
 
 import java.io.File;
 
@@ -9,17 +9,32 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 @Component
-public class CrearFicheroPaso  implements Tasklet{
+public class CopiarFicheros implements Tasklet {
 
 	@Value("${carpetaOrigen}")
 	private String carpetaOrigen;
 	
+	@Value("${carpetaDestino}")
+	private String carpetaDestino;
+	
+	
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 		
-		System.out.println("creando un fichero");
-		File fichero= new File(carpetaOrigen+"/hola.txt");
-		fichero.createNewFile();
+		File destino= new File(carpetaDestino);
+		if (destino.isDirectory()) {
+			
+			File origen= new File(carpetaOrigen);
+			
+			File[] ficheros= origen.listFiles();
+			
+			for (int i=0;i<ficheros.length;i++) {
+				
+				File nuevo=new File(destino,ficheros[i].getName());
+				nuevo.createNewFile();
+			}
+			
+		}
 		
 		return RepeatStatus.FINISHED;
 	}
