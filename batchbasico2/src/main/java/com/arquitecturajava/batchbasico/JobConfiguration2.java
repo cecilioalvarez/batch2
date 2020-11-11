@@ -50,6 +50,8 @@ public class JobConfiguration2 {
 		lista.add("que");
 		lista.add("tal");
 		lista.add("estas");
+		
+		
 		return lista;
 		
 	}
