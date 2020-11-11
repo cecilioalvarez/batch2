@@ -10,14 +10,15 @@ import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
+
 public class ItemBasicoReader implements ItemReader<String> {
 
 	// iterador recorre una lista de elementos
 	//iterador
+	
 	private Iterator<String> it;
 
-	@Autowired
+	
 	public ItemBasicoReader(List<String> datos) {
 		
 		// lo que hace es pone el puntero del iterador al principio de la lista

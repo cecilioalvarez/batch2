@@ -10,6 +10,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -27,7 +28,7 @@ import com.arquitecturajava.batchbasico.pasosficheros.CrearFicheroPaso;
 import com.arquitecturajava.batchbasico.pasosficheros.ListarFicherosPaso;
 
 @EnableBatchProcessing
-@ComponentScan("com.arquitecturajava.batchbasico.jobduplicar")
+@ComponentScan("com.arquitecturajava.batchbasico.ficherostexto")
 public class JobConfiguration2 {
 	
 	@Autowired
@@ -35,10 +36,10 @@ public class JobConfiguration2 {
 	
 	@Autowired
 	private StepBuilderFactory stepBuilderFactory;
-	// liga el componente registrado
 	
-	@Autowired
-	private ItemBasicoReader lector;
+	
+
+	
 	
 	@Bean
 	public List<String> datos() {
@@ -52,13 +53,19 @@ public class JobConfiguration2 {
 		return lista;
 		
 	}
+	//a mano del todo
+	@Bean 
+	ItemReader<String> lector() {
+		
+		return new ItemBasicoReader(datos());
+	}
 	
 	@Bean
 	public Step paso1() {
 		
 		return stepBuilderFactory.get("paso1")
 				.<String,String>chunk(5)
-				.reader(lector)
+				.reader(lector())
 				.writer(lista-> {
 					
 						for (String item:lista) {
@@ -73,7 +80,7 @@ public class JobConfiguration2 {
 	public Flow flujo1() {
 		
 		
-		FlowBuilder<Flow> flujoBuilder= new FlowBuilder<>("flujoPlano");
+		FlowBuilder<Flow> flujoBuilder= new FlowBuilder<>("flujo1");
 		return flujoBuilder.start(paso1()).on("COMPLETED").end().build();
 	}
 	
