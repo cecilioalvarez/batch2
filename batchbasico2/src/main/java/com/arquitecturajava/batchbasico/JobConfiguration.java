@@ -5,12 +5,16 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 import com.arquitecturajava.batchbasico.jobduplicar.CopiarCarpeta;
 import com.arquitecturajava.batchbasico.jobduplicar.CopiarFicheros;
+import com.arquitecturajava.batchbasico.jobduplicar.CopiarFicherosMayusculas;
+import com.arquitecturajava.batchbasico.jobduplicar.FormatoDecider;
 import com.arquitecturajava.batchbasico.pasos.Paso1;
 import com.arquitecturajava.batchbasico.pasos.Paso2;
 import com.arquitecturajava.batchbasico.pasos.Paso3;
@@ -44,6 +48,11 @@ public class JobConfiguration {
 	@Autowired 
 	private CopiarFicheros copiarFicheros;
 	
+	@Autowired
+	private CopiarFicherosMayusculas copiarFicherosMayusculas;
+	
+	@Autowired
+	private FormatoDecider decisor;
 	
 	// este es el codigo que define el job
 	
@@ -114,6 +123,15 @@ public class JobConfiguration {
 
 	}
 	
+	
+	@Bean
+	public Step copiarFicherosMayusculasStep() {
+		
+		return stepBuilderFactory.get("copiarFicherosMayusculas").tasklet(copiarFicherosMayusculas).build();
+
+	}
+	
+	
 	//paso para el tasklet
 
 	@Bean
@@ -146,10 +164,37 @@ public class JobConfiguration {
 //		
 //	}
 	
+	// job que yo tengo aqui cambiara
+	//porque le he asignado otra tarea
+	
 	@Bean 
-	Job job() {
+	public Flow flujo() {
 		
-		return jobBuilderFactory.get("duplicar").start(copiarStep()).next(copiarFicherosStep()).build();
+		// flujo es un conjunto de steps con sus tasklet
+		FlowBuilder<Flow> flujoBuilder= new FlowBuilder("flujo1");
+		
+		 return  flujoBuilder
+				
+				.start(copiarStep())
+				.on("COMPLETED")
+				.to(decisor)
+				.on("MINUSCULAS")
+				.to(copiarFicherosStep())
+				.from(decisor)
+				.on("MAYUSCULAS")
+				.to(copiarFicherosMayusculasStep())
+				.on("COMPLETED")
+				.end()
+				.build();
+	}
+	
+	@Bean
+	public Job job() {
+		
+		// en el metodo start en vez de tener un conjunto de datos
+		// lo que tiene es un flujo que los agrupa a todos
+		
+		return jobBuilderFactory.get("flujo1").start(flujo()).end().build();
 		
 	}
 	
