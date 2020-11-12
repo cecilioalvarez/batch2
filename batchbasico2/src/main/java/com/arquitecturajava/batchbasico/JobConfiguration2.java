@@ -10,6 +10,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 import com.arquitecturajava.batchbasico.ficherostexto.Factura;
+import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaProcessor;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaReader;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaWriter;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoReader;
@@ -108,19 +110,24 @@ public class JobConfiguration2 {
 			return new ItemBasicoFacturaWriter();
 		}
 		
+		
+		@Bean 
+		ItemProcessor<Factura,Factura> procesador() {
+			
+			return new ItemBasicoFacturaProcessor();
+		}
+		
 		@Bean
 		public Step paso1() {
 			
 			return stepBuilderFactory.get("paso1")
 					.<Factura,Factura>chunk(5)
 					.reader(lector())
+					.processor(procesador())
 					.writer(escritor()).build();
 		}
 	
-	
-	
-	
-	
+
 	
 	@Bean
 	public Flow flujo1() {
