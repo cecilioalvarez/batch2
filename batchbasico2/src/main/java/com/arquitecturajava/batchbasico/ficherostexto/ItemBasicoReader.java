@@ -23,7 +23,6 @@ public class ItemBasicoReader implements ItemReader<String> {
 		
 		// lo que hace es pone el puntero del iterador al principio de la lista
 		
-		
 		// he hecho que la lista se muestra como una estructura recorrible
 		it = datos.iterator();
 	}
