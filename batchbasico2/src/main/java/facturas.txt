@@ -1,0 +1,5 @@
+id,concepto,importe
+1,televisor,500
+2,tablet ,600
+3,disco duro ,300
+4,auriculares,70

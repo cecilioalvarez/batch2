@@ -13,26 +13,18 @@ import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.io.ClassPathResource;
 
 import com.arquitecturajava.batchbasico.ficherostexto.Factura;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaProcessor;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaReader;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaWriter;
-import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoReader;
-import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoWriter;
-import com.arquitecturajava.batchbasico.jobduplicar.CopiarCarpeta;
-import com.arquitecturajava.batchbasico.jobduplicar.CopiarFicheros;
-import com.arquitecturajava.batchbasico.jobduplicar.CopiarFicherosMayusculas;
-import com.arquitecturajava.batchbasico.jobduplicar.FormatoDecider;
-import com.arquitecturajava.batchbasico.pasos.Paso1;
-import com.arquitecturajava.batchbasico.pasos.Paso2;
-import com.arquitecturajava.batchbasico.pasos.Paso3;
-import com.arquitecturajava.batchbasico.pasosficheros.CrearCarpetaPaso;
-import com.arquitecturajava.batchbasico.pasosficheros.CrearFicheroPaso;
-import com.arquitecturajava.batchbasico.pasosficheros.ListarFicherosPaso;
 
 @EnableBatchProcessing
 @ComponentScan("com.arquitecturajava.batchbasico.ficherostexto")
@@ -117,12 +109,44 @@ public class JobConfiguration2 {
 			return new ItemBasicoFacturaProcessor();
 		}
 		
+
+		@Bean
+		public FlatFileItemReader<Factura> lectorFichero() {
+			
+			//genera el reader
+			FlatFileItemReader<Factura> lector= new FlatFileItemReader<Factura>();
+			
+			//configura las linea de salto
+			lector.setLinesToSkip(1);
+			//decide donde va a leer el fichero
+			lector.setResource(new ClassPathResource("facturas.txt"));
+			//mapper de linea a objeto
+			DefaultLineMapper<Factura> mapeador= new DefaultLineMapper<Factura>();
+			//linea delimitadora
+			DelimitedLineTokenizer separador= new DelimitedLineTokenizer();
+			// que campos definen la estructa
+			separador.setNames(new String[]{"numero","concepto","importe"});
+			
+			mapeador.setLineTokenizer(separador);
+			
+			mapeador.setFieldSetMapper(new FacturaFieldSetMapper() );
+			
+			mapeador.afterPropertiesSet();
+			
+			lector.setLineMapper(mapeador);
+			
+			return lector;
+		}
+		
+		
+		
+		
 		@Bean
 		public Step paso1() {
 			
 			return stepBuilderFactory.get("paso1")
 					.<Factura,Factura>chunk(5)
-					.reader(lector())
+					.reader(lectorFichero())
 					.processor(procesador())
 					.writer(escritor()).build();
 		}
