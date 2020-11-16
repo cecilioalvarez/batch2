@@ -13,6 +13,8 @@ import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.ItemPreparedStatementSetter;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
@@ -25,17 +27,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import com.arquitecturajava.batchbasico.ficherostexto.Factura;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaProcessor;
 import com.arquitecturajava.batchbasico.ficherostexto.ItemBasicoFacturaWriter;
+import com.arquitecturajava.batchbasico.jdbc.FacturaPreparedStatementSetters;
 import com.arquitecturajava.batchbasico.jdbc.FacturaRowMapper;
 
 @EnableBatchProcessing
 @ComponentScan("com.arquitecturajava.batchbasico.ficherostexto")
 public class JobConfiguration3 {
 
+	private static final String INSERCION= "Insert into Facturas2 (numero,concepto,importe) "+
+									"values (?,?,?)";
+	
+	
 	@Autowired
 	private JobBuilderFactory jobBuilderFactory;
 
@@ -110,7 +118,7 @@ public class JobConfiguration3 {
 	public Step paso1() throws SQLException {
 
 		return stepBuilderFactory.get("paso1").<Factura, Factura>chunk(5).reader(lectorJDBC())
-				.processor(procesador()).writer(escribirFichero()).build();
+				.processor(procesador()).writer(escritorJDBC(dataSource(), plantilla(dataSource()))).build();
 	}
 
 	@Bean
@@ -123,7 +131,7 @@ public class JobConfiguration3 {
 	@Bean
 	public Job job() throws SQLException {
 
-		return jobBuilderFactory.get("mijob2").start(flujo1()).end().build();
+		return jobBuilderFactory.get("mijob3").start(flujo1()).end().build();
 
 	}
 	
@@ -148,6 +156,27 @@ public class JobConfiguration3 {
 		lector.setRowMapper(new FacturaRowMapper());
 		return lector;
 		
+		
+	}
+	
+	@Bean
+	NamedParameterJdbcTemplate plantilla(DataSource dataSource) {
+		return new NamedParameterJdbcTemplate(dataSource);
+	}
+	
+	
+	@Bean
+	ItemWriter<Factura> escritorJDBC(DataSource dataSource , NamedParameterJdbcTemplate plantilla) {
+		
+		JdbcBatchItemWriter<Factura> escritor=new JdbcBatchItemWriter<>();
+		escritor.setDataSource(dataSource);
+		escritor.setJdbcTemplate(plantilla);
+		escritor.setSql(INSERCION);
+		
+		ItemPreparedStatementSetter<Factura> setter= new FacturaPreparedStatementSetters();
+		escritor.setItemPreparedStatementSetter(setter);
+		
+		return escritor;
 		
 	}
 	
