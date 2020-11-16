@@ -29,6 +29,10 @@ public class Factura {
 		this.concepto = concepto;
 		this.importe = importe;
 	}
+	public Factura() {
+		super();
+	}
+	
 
 	
 }
