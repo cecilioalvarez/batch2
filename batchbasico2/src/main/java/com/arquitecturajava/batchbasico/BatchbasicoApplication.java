@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 
 
 @SpringBootApplication
-@Import(JobConfiguration2.class)
+@Import(JobConfiguration3.class)
 public class BatchbasicoApplication {
 
 	// nuestro proyecto de spring boot
